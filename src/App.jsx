@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react";
 
 const groceryItems = [
@@ -28,11 +29,15 @@ export default function App() {
     setItems([...items, item]);
   }
 
+  function handleDeleteItem(id) {
+    setItems((items) => items.filter((item) => item.id !== id)); //fiter item cari item id yang idnya tidak sama dengan id
+  }
+
   return (
     <div className="app">
       <Header />
       <Form onAddItem={handleAddItem} />
-      <GroceryList items={items}/>
+      <GroceryList items={items} onDeleteItem={handleDeleteItem} />
       <Footer />
     </div>
   );
@@ -43,23 +48,22 @@ function Header() {
 }
 
 function Form({ onAddItem }) {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [quantity, setQuantity] = useState(1);
 
   function handleSubmit(e) {
     e.preventDefault();
 
-    if(!name) return; //stop submit if name === false
+    if (!name) return; //stop submit if name === false
 
-    const newItem = {name, quantity, checked: false, id:Date.now()};
+    const newItem = { name, quantity, checked: false, id: Date.now() };
     onAddItem(newItem);
 
     console.log(newItem);
-    
-    setName('');
+
+    setName("");
     setQuantity(1);
   }
-
 
   const quantityNum = [...Array(20)].map((_, i) => (
     <option value={i + 1} key={i + 1}>
@@ -71,33 +75,31 @@ function Form({ onAddItem }) {
     <form className="add-form" onSubmit={handleSubmit}>
       <h3>Hari ini belanja apa kita?</h3>
       <div>
-        <select value={quantity} onChange={(e) => setQuantity(Number(e.target.value))}>{quantityNum}</select>
-        <input type="text" placeholder="nama barang..." value={name} onChange={(e) => setName(e.target.value)}/>
+        <select
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+        >
+          {quantityNum}
+        </select>
+        <input
+          type="text"
+          placeholder="nama barang..."
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
       </div>
       <button>Tambah</button>
     </form>
   );
 }
 
-function GroceryList({items}) {
+function GroceryList({ items, onDeleteItem }) {
   return (
     <>
       <div className="list">
         <ul>
           {items.map((item) => (
-            <li key={item.id}>
-              <input type="checkbox" checked={item.checked} />
-              <span
-                style={
-                  item.checked === true
-                    ? { textDecoration: "line-through" }
-                    : {}
-                }
-              >
-                {item.quantity} {item.name}
-              </span>
-              <button>&times;</button>
-            </li>
+           <Item item={item} key={item.id} onDeleteItem={onDeleteItem}/>
           ))}
         </ul>
       </div>
@@ -110,6 +112,24 @@ function GroceryList({items}) {
         <button>Bersihkan Daftar</button>
       </div>
     </>
+  );
+}
+
+function Item({item, onDeleteItem}) {
+  return (
+    <li key={item.id} >
+    <input type="checkbox" checked={item.checked} />
+    <span 
+      style={
+        item.checked === true
+          ? { textDecoration: "line-through" }
+          : {}
+      }
+    >
+      {item.quantity} {item.name}
+    </span>
+    <button onClick={() => onDeleteItem(item. id)}>&times;</button>
+  </li>
   );
 }
 
