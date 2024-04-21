@@ -18,7 +18,7 @@ const groceryItems = [
     id: 3,
     name: "Air Mineral",
     quantity: 3,
-    checked: false,
+    checked: true,
   },
 ];
 
@@ -33,12 +33,29 @@ export default function App() {
     setItems((items) => items.filter((item) => item.id !== id)); //fiter item cari item id yang idnya tidak sama dengan id
   }
 
+  function handleToggleItem(id) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, checked: !item.checked } : item
+      )
+    );
+  }
+
+  function handleClearItems() {
+    setItems([]);
+  }
+
   return (
     <div className="app">
       <Header />
       <Form onAddItem={handleAddItem} />
-      <GroceryList items={items} onDeleteItem={handleDeleteItem} />
-      <Footer />
+      <GroceryList
+        items={items}
+        onDeleteItem={handleDeleteItem}
+        onToggleItem={handleToggleItem}
+        onClearItems={handleClearItems}
+      />
+      <Footer items={items}/>
     </div>
   );
 }
@@ -93,50 +110,75 @@ function Form({ onAddItem }) {
   );
 }
 
-function GroceryList({ items, onDeleteItem }) {
+function GroceryList({ items, onDeleteItem, onToggleItem, onClearItems }) {
+  const [sortBy, setSortBy] = useState("input");
+
+  let sortedItems;
+
+  switch (sortBy) {
+    case "name":
+      sortedItems = items.slice().sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    case "checked":
+      sortedItems = items.slice().sort((a, b) => b.checked - a.checked);
+      break;
+    default:
+      sortedItems = items;
+  }
+
+  console.log(sortedItems);
   return (
     <>
       <div className="list">
         <ul>
-          {items.map((item) => (
-           <Item item={item} key={item.id} onDeleteItem={onDeleteItem}/>
+          {sortedItems.map((item) => (
+            <Item
+              item={item}
+              key={item.id}
+              onDeleteItem={onDeleteItem}
+              onToggleItem={onToggleItem}
+            />
           ))}
         </ul>
       </div>
       <div className="actions">
-        <select>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
           <option value="input">Urutkan berdasarkan urutan input</option>
           <option value="name">Urutkan berdasarkan nama barang</option>
           <option value="checked">Urutkan berdasarkan ceklis</option>
         </select>
-        <button>Bersihkan Daftar</button>
+        <button onClick={onClearItems}>Bersihkan Daftar</button>
       </div>
     </>
   );
 }
 
-function Item({item, onDeleteItem}) {
+function Item({ item, onDeleteItem, onToggleItem }) {
   return (
-    <li key={item.id} >
-    <input type="checkbox" checked={item.checked} />
-    <span 
-      style={
-        item.checked === true
-          ? { textDecoration: "line-through" }
-          : {}
-      }
-    >
-      {item.quantity} {item.name}
-    </span>
-    <button onClick={() => onDeleteItem(item. id)}>&times;</button>
-  </li>
+    <li key={item.id}>
+      <input
+        type="checkbox"
+        checked={item.checked}
+        onChange={() => onToggleItem(item.id)}
+      />
+      <span style={item.checked ? { textDecoration: "line-through" } : {}}>
+        {item.quantity} {item.name}
+      </span>
+      <button onClick={() => onDeleteItem(item.id)}>&times;</button>
+    </li>
   );
 }
 
-function Footer() {
+function Footer({ items }) {
+  if(items.length === 0) return  <footer className="stats">Daftar belanjaan masih kosong</footer>
+
+  const totalItems = items.length;
+  const checkedItems = items.filter((item) => item.checked).length;
+  const percentage = Math.round((checkedItems / totalItems) * 100);
+
   return (
     <footer className="stats">
-      Ada 10 barang di daftar belanjaan, 5 barang sudah dibeli (50%)
+      Ada {totalItems} barang di daftar belanjaan, {checkedItems} barang sudah dibeli ({percentage}%)
     </footer>
   );
 }
